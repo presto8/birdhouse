@@ -10,11 +10,12 @@ setup(
         'web.py',
         'googlemaps',
         'geopy',
+        'toml',
         'thingsboard_api_tools @ https://github.com/eykamp/thingsboard_api_tools/archive/master.zip',
     ],
     entry_points='''
         [console_scripts]
-        rlgl=redlight_greenlight.redlight_greenlight.main
+        rlgl=redlight_greenlight.redlight_greenlight:main
     ''',
 
     author="Christopher Eykamp",

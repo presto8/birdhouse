@@ -7,13 +7,22 @@ import re
 import os
 import time
 import hashlib          # for md5
+import toml
 
 from thingsboard_api_tools import TbApi # sudo pip install git+git://github.com/eykamp/thingsboard_api_tools.git --upgrade
 
-from redlight_greenlight_config import motherShipUrl, username, password, data_encoding, google_geolocation_key, firmware_images_folder
 
-tbapi = TbApi(motherShipUrl, username, password)
-gmaps = googlemaps.Client(key=google_geolocation_key)
+def read_config():
+    if 'XDG_CONFIG_HOME' in os.environ:
+        path = os.path.join(os.environ['XDG_CONFIG_HOME'], 'birdhouse.cfg')
+    else:
+        path = os.path.join(os.environ['HOME'], '.config', 'birdhouse.cfg')
+    return toml.load(os.path.abspath(path))
+
+
+CFG = read_config()
+tbapi = TbApi(CFG['motherShipUrl'], CFG['username'], CFG['password'])
+gmaps = googlemaps.Client(key=CFG['google_geolocation_key'])
 
 urls = (
     '/', 'set_led_color',
@@ -46,7 +55,7 @@ class handle_hotspots:
         web.debug("Handling hotspots")
         try:
             data = web.data()
-            decoded = data.decode(data_encoding)
+            decoded = data.decode(CFG['data_encoding'])
             incoming_data = json.loads(decoded)
             # web.debug(incoming_data)
 
@@ -112,7 +121,7 @@ class handle_hotspots:
 class handle_firmware:
     def GET(self):
         web.debug("Handling firmware request")
-        return get_firmware(get_path_of_latest_firmware(firmware_images_folder))
+        return get_firmware(get_path_of_latest_firmware(CFG['firmware_images_folder']))
 
 
 def get_path_of_latest_firmware(folder, current_major=0, current_minor=0):
@@ -160,7 +169,7 @@ class handle_update:
         device_specific_subfolder = None
 
         # If there is a dedicated folder for this device, search there; if not, use the default firmware_images_folder
-        subdirs = get_immediate_subdirectories(firmware_images_folder)
+        subdirs = get_immediate_subdirectories(CFG['firmware_images_folder'])
 
         for subdir in subdirs:
             print(subdir)
@@ -173,9 +182,9 @@ class handle_update:
 
 
         if device_specific_subfolder is None:
-            folder = firmware_images_folder
+            folder = CFG['firmware_images_folder']
         else:
-            folder = os.path.join(firmware_images_folder, device_specific_subfolder)
+            folder = os.path.join(CFG['firmware_images_folder'], device_specific_subfolder)
 
         print("Using firmware folder " + folder)
 
@@ -249,12 +258,12 @@ class set_led_color:
     def POST(self):
         # Decode request data
 
-        incoming_data = json.loads(str(web.data().decode(data_encoding)))
+        incoming_data = json.loads(str(web.data().decode(CFG['data_encoding'])))
 
         temperature = incoming_data["temperature"]
         device_id = incoming_data["device_id"]
 
-        web.debug("Received data for " + device_id + ": ", web.data().decode(data_encoding))
+        web.debug("Received data for " + device_id + ": ", web.data().decode(CFG['data_encoding']))
 
         if float(temperature) < 8:
             color = 'GREEN'
