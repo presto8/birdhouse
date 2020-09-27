@@ -25,12 +25,10 @@ tbapi = TbApi(CFG['motherShipUrl'], CFG['username'], CFG['password'])
 gmaps = googlemaps.Client(key=CFG['google_geolocation_key'])
 
 urls = (
-    '/', 'set_led_color',
     '/hotspots/', 'handle_hotspots',
     '/update/(.*)', 'handle_update',
     '/firmware', 'handle_firmware',
     '/validatekey', 'handle_validate_key',
-    '/purpleair/(.*)', 'handle_purpleair'
 )
 
 app = web.application(urls, globals())
@@ -39,15 +37,6 @@ app = web.application(urls, globals())
 def get_immediate_subdirectories(a_dir):
     return [name for name in os.listdir(a_dir)
         if os.path.isdir(os.path.join(a_dir, name))]
-
-
-class handle_purpleair:
-    def POST(self, data):
-        web.debug("Handling purpleair")
-        print("data: ", web.data())
-        print("passed: ", data)
-        print("ctx: ", web.ctx)
-        print("env: ", web.ctx.env)
 
 
 class handle_hotspots:
@@ -252,29 +241,6 @@ class handle_validate_key:
         token = tbapi.get_device_token(device)
 
         return "true" if token == key else "false"
-
-
-class set_led_color:
-    def POST(self):
-        # Decode request data
-
-        incoming_data = json.loads(str(web.data().decode(CFG['data_encoding'])))
-
-        temperature = incoming_data["temperature"]
-        device_id = incoming_data["device_id"]
-
-        web.debug("Received data for " + device_id + ": ", web.data().decode(CFG['data_encoding']))
-
-        if float(temperature) < 8:
-            color = 'GREEN'
-        elif float(temperature) < 15:
-            color = 'YELLOW'
-        else:
-            color = 'RED'
-
-        outgoing_data = { "LED": color, "lastSeen": int(time.time()) }
-
-        tbapi.set_shared_attributes(device_id, outgoing_data)
 
 
 def main():
