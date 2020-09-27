@@ -4,6 +4,15 @@ Tools for the birdhouse project.
 Read more: http://sensorbot.org
 
 
+Components
+==========
+
+- `redlight_greenlight` handles a variety of disparate tasks, including
+  verifying device keys, updating firmware of deployed devices, providing
+  current firmware for provisioning new devices, geolocating, etc.
+
+
+
 Developer installation
 ======================
 
