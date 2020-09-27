@@ -268,5 +268,9 @@ class set_led_color:
         tbapi.set_shared_attributes(device_id, outgoing_data)
 
 
-if __name__ == "__main__":
+def main():
     app.run()
+
+
+if __name__ == "__main__":
+    main()
