@@ -33,11 +33,11 @@ First, set up virtualenv to isolate the Python modules:
     source venv/bin/activate
     pip install --editable .
 
-Now try and run the `myapp` executable to make sure everything is working:
+Now try and run the `rlgl` executable to make sure everything is working:
 
     rlgl
 
-Finally, create a symbolic link to be able to run myapp even when the virtualenv
+Finally, create a symbolic link to be able to run rlgl even when the virtualenv
 is not activated.
 
     sudo ln -s $PWD/venv/bin/rlgl /usr/local/bin/rlgl
