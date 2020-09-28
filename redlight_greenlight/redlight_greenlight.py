@@ -8,19 +8,35 @@ import os
 import time
 import hashlib          # for md5
 import toml
+import sys
 
 from thingsboard_api_tools import TbApi # sudo pip install git+git://github.com/eykamp/thingsboard_api_tools.git --upgrade
 
 
-def read_config():
+def build_config_path(basename="birdhouse.cfg"):
     if 'XDG_CONFIG_HOME' in os.environ:
-        path = os.path.join(os.environ['XDG_CONFIG_HOME'], 'birdhouse.cfg')
+        return os.path.join(os.environ['XDG_CONFIG_HOME'], basename)
     else:
-        path = os.path.join(os.environ['HOME'], '.config', 'birdhouse.cfg')
-    return toml.load(os.path.abspath(path))
+        return os.path.join(os.environ['HOME'], '.config', basename)
 
 
-CFG = read_config()
+def show_config_help(path):
+    print(path + """ does not exist; please create it with the following contents:
+motherShipUrl = "http://localhost:8080"
+username = "fixme"
+password = "fixme"
+data_encoding = "utf-8"
+google_geolocation_key = "fixme"
+firmware_images_folder = "fixme"
+""")
+
+
+try:
+    CFG = toml.load(build_config_path())
+except FileNotFoundError:
+    show_config_help(build_config_path())
+    sys.exit(1)
+
 tbapi = TbApi(CFG['motherShipUrl'], CFG['username'], CFG['password'])
 gmaps = googlemaps.Client(key=CFG['google_geolocation_key'])
 
