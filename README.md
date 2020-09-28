@@ -7,10 +7,13 @@ Read more: http://sensorbot.org
 Components
 ==========
 
-- `redlight_greenlight` handles a variety of disparate tasks, including
-  verifying device keys, updating firmware of deployed devices, providing
-  current firmware for provisioning new devices, geolocating, etc.
-
+- `redlight_greenlight` runs on sensorbot.org and is used to provide support
+  services to the devices and other scripts.  For example, when
+  installing firmware on a new device, the firmware loader can get a compiled
+  copy of the firmware off the server, making it easier for people to flash a
+  new device without compiling their own firmware from source.  Likewise with
+  the device key confirmation service -- this can be used during provisioning a
+  new device to make sure people entered their key properly.
 
 
 Developer installation
