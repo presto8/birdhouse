@@ -143,10 +143,8 @@ def get_firmware(full_filename):
 
     print("Sending firmware (" + byte_count + " bytes), with hash " + md5)
 
-    response = Response(bin_image)
-    response.headers["Content-type"] = "application/octet-stream"
-    response.headers["Content-transfer-encoding"] = "base64"
-    response.headers["Content-length"] = byte_count
+    response = Response(bin_image, mimetype="application/octet-stream")
+    # response.headers["Content-transfer-encoding"] = "base64"
     response.headers["X-MD5"] = md5
     return response
 
