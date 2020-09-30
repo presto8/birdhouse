@@ -53,31 +53,15 @@ def hotspots():
         return "did not provide any request data", 400
 
     hotspots = request.json.get("visibleHotspots", [])
-
-    #     # Diagnose common configuration problem
-    #     if '$ss' in decoded:
-    #         pos = decoded.find('$ss')
-    #         while(pos > -1):
-    #             end = decoded.find(" ", pos)
-    #             word = decoded[pos+4:end].strip(',')
-    #             print("Missing server attribute", word)
-
-    #             pos = decoded.find('$ss', pos + 1)
-    #     return
-
     print("Geolocating for {} ".format(hotspots))
 
     try:
         results = gmaps.geolocate(wifi_access_points=hotspots)
     except Exception as ex:
-        print("Exception while geolocating:", ex)
-        return
+        return "Exception while geolocating: {}".format(ex), 500
 
     if "error" in results:
         return "Received error from Google API!", 500
-
-    device_token = request.json.get("device_token")
-    print("Geocoding results for {} = {}".format(device_token, results))
 
     try:
         gmaps_coord = (results["location"]["lat"], results["location"]["lng"])
@@ -94,14 +78,15 @@ def hotspots():
 
     outgoing_data = {"wifiDistance": distance.m, "wifiDistanceAccuracy": gmaps_acc}
 
-    if 'notelemetry' in request.json:
-        return "success", 200
+    if 'device_token' in request.json:
+        device_token = request.json["device_token"]
+        print("Sending ", outgoing_data)
+        try:
+            tbapi.send_telemetry(device_token, outgoing_data)
+        except Exception:
+            return "Error sending location telemetry!", 500
 
-    print("Sending ", outgoing_data)
-    try:
-        tbapi.send_telemetry(device_token, outgoing_data)
-    except Exception:
-        return "Error sending location telemetry!", 500
+    return outgoing_data
 
 
 # Returns a copy of the latest version of the firmware
