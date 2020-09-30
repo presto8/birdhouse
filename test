@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+SOURCE_DIRS=(redlight_greenlight tests)
+
+set -euo pipefail
+
+main() {
+    parse_args "$@"
+    check_venv
+
+    if [[ $LOOP -eq 1 ]]; then
+        find "${SOURCE_DIRS[@]}" -name "*.py" | entr pytest "${ARGS[@]}"
+    else
+        pytest "${ARGS[@]}"
+    fi
+}
+
+parse_args() {
+    eval set -- $(getopt --options "" --longoptions loop -- "$@")
+
+    export LOOP=0
+
+    while [[ $# ]]; do
+        case "$1" in
+            --loop) LOOP=1; shift ;;
+            --) shift ; break ;;
+            *)  echo "error!" ; exit 1 ;;
+        esac
+    done
+
+    export ARGS=("$@")
+}
+
+check_venv() {
+    local script_path
+    script_path=$(dirname "$(realpath -s "$0")")
+    if [[ ! -v VIRTUAL_ENV ]]; then
+        echo automatically activating virtualenv before running tests
+        source "$script_path/venv/bin/activate"
+    fi
+}
+
+main "$@"

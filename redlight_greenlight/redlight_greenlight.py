@@ -2,7 +2,7 @@
 
 from flask import Flask, request, Response
 import googlemaps       # sudo pip install googlemaps
-import geopy.distance   # sudo pip install geopy
+import geopy.distance
 import re
 import os
 import hashlib          # for md5
@@ -48,14 +48,11 @@ def get_immediate_subdirectories(a_dir):
 @app.route("/hotspots")
 def hotspots():
     print("handling hotspots")
-    # try:
 
-    known_lat = request.json["latitude"]
-    known_lng = request.json["longitude"]
-    device_token = request.json["device_token"]
+    if request.json is None:
+        return "did not provide any request data", 400
 
-    # except Exception as ex:
-    #     print("Cannot parse incoming packet:", web.data(), ex)
+    hotspots = request.json.get("visibleHotspots", [])
 
     #     # Diagnose common configuration problem
     #     if '$ss' in decoded:
@@ -68,44 +65,43 @@ def hotspots():
     #             pos = decoded.find('$ss', pos + 1)
     #     return
 
-    hotspots = str(request.json["visibleHotspots"])
-    print("Geolocating for data " + hotspots)
+    print("Geolocating for {} ".format(hotspots))
 
     try:
         results = gmaps.geolocate(wifi_access_points=hotspots)
     except Exception as ex:
-        print("Exception while geolocating", ex)
+        print("Exception while geolocating:", ex)
         return
-
-    print("Geocoding results for " + device_token + ":", results)
 
     if "error" in results:
-        print("Received error from Google API!")
-        return
+        return "Received error from Google API!", 500
+
+    device_token = request.json.get("device_token")
+    print("Geocoding results for {} = {}".format(device_token, results))
 
     try:
-        wifi_lat = results["location"]["lat"]
-        wifi_lng = results["location"]["lng"]
-        wifi_acc = results["accuracy"]
+        gmaps_coord = (results["location"]["lat"], results["location"]["lng"])
+        gmaps_acc = results["accuracy"]
     except Exception:
-        print("Error parsing response from Google Location API!")
-        return
+        return "Error parsing response from Google Location API!", 500
 
-    print("Calculating distance...")
+    known_coord = (request.json.get("latitude", 0), request.json.get("longitude", 0))
+    print("Calculating distance between {} and {}...".format(known_coord, gmaps_coord))
     try:
-        dist = geopy.distance.vincenty((known_lat, known_lng), (wifi_lat, wifi_lng)).m  # In meters!
+        distance = geopy.distance.distance(known_coord, gmaps_coord)
     except Exception:
-        print("Error calculating!")
-        return
+        return "geopy.distance had an error", 500
 
-    outgoing_data = {"wifiDistance" : dist, "wifiDistanceAccuracy" : wifi_acc}
+    outgoing_data = {"wifiDistance": distance.m, "wifiDistanceAccuracy": gmaps_acc}
+
+    if 'notelemetry' in request.json:
+        return "success", 200
 
     print("Sending ", outgoing_data)
     try:
         tbapi.send_telemetry(device_token, outgoing_data)
     except Exception:
-        print("Error sending location telemetry!")
-        return
+        return "Error sending location telemetry!", 500
 
 
 # Returns a copy of the latest version of the firmware
