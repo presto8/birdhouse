@@ -45,10 +45,8 @@ def get_immediate_subdirectories(a_dir):
     return [name for name in os.listdir(a_dir) if os.path.isdir(os.path.join(a_dir, name))]
 
 
-@app.route("/hotspots")
-def hotspots():
-    print("handling hotspots")
-
+@app.route("/wifi_location")
+def wifi_location():
     if request.json is None:
         return "did not provide any request data", 400
 
