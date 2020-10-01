@@ -45,8 +45,13 @@ def get_immediate_subdirectories(a_dir):
     return [name for name in os.listdir(a_dir) if os.path.isdir(os.path.join(a_dir, name))]
 
 
-@app.route("/wifi_location")
+@app.route("/wifi_location", methods=["POST"])
 def wifi_location():
+    """Called by ThingsBoard server when a device sends a message containing
+    hotspot details. Sends a geolocation request to Google based on visible
+    Wi-Fi hotspots and signal strengths reported by device. Returns the
+    location, distance, and accuracy in JSON."""
+
     if request.json is None:
         return "did not provide any request data", 400
 
