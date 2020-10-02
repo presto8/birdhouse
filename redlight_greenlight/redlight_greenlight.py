@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from flask import Flask, request, Response
+from collections import namedtuple
 import googlemaps       # sudo pip install googlemaps
 import geopy.distance
 import re
@@ -93,10 +94,15 @@ def wifi_location():
 
 
 # Returns a copy of the latest version of the firmware
-@app.route("/firmware")
+@app.route("/firmware", methods=["GET"])
 def firmware():
-    print("handling firmware request")
-    return get_firmware(get_path_of_latest_firmware(CFG['firmware_images_folder']))
+    """Called by provisioning scripts to grab the latest firmware for flashing
+    a device. Returns firmware binary."""
+    fw_path = get_path_of_latest_firmware(CFG['firmware_images_folder'])
+    if fw_path is None:
+        return "unable to find firmware", 404
+    fw = get_firmware(fw_path)
+    return Response(fw.data, mimetype="application/octet-stream", headers={"X-MD5": fw.md5})
 
 
 def get_path_of_latest_firmware(folder, current_major=0, current_minor=0):
@@ -118,19 +124,12 @@ def get_path_of_latest_firmware(folder, current_major=0, current_minor=0):
     return newest_firmware
 
 
-def get_firmware(full_filename):
-    with open(full_filename, 'rb') as file:
-        bin_image = file.read()
-
-    byte_count = str(len(bin_image))
+def get_firmware(firmware_path):
+    with open(firmware_path, 'rb') as f:
+        bin_image = f.read()
     md5 = hashlib.md5(bin_image).hexdigest()
-
-    print("Sending firmware (" + byte_count + " bytes), with hash " + md5)
-
-    response = Response(bin_image, mimetype="application/octet-stream")
-    # response.headers["Content-transfer-encoding"] = "base64"
-    response.headers["X-MD5"] = md5
-    return response
+    print("Found firmware bytes={} md5={}".format(len(bin_image), md5))
+    return namedtuple('Firmware', 'data md5')(bin_image, md5)
 
 
 def find_firmware_folder(current_version, mac_address):

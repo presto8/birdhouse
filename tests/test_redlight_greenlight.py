@@ -1,5 +1,6 @@
 import pytest
 from redlight_greenlight import redlight_greenlight
+import hashlib
 
 
 @pytest.fixture
@@ -20,3 +21,22 @@ def test_wifi_location(client):
     assert response.status_code == 200
     assert response.json['wifiDistanceAccuracy'] == 30
     assert int(response.json['wifiDistance']) == 6
+
+
+def test_firmware(client, tmpdir):
+    fw_dir = tmpdir.mkdir('firmwares')
+    redlight_greenlight.CFG['firmware_images_folder'] = fw_dir
+
+    # firmware not found should yield 404
+    assert client.get('/firmware').status_code == 404
+
+    # create a firmware
+    fw_file = fw_dir / "1.0.bin"
+    fw_contents = b"hello, world\x01\x02"
+    fw_file.write(fw_contents)
+
+    # check firmware is returned along with correct hash
+    resp = client.get('/firmware')
+    assert resp.status_code == 200
+    assert resp.data == fw_contents
+    assert resp.headers['X-MD5'] == hashlib.md5(fw_contents).hexdigest()
