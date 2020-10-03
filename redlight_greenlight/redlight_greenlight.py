@@ -156,20 +156,19 @@ def find_firmware_folder(current_version, mac_address):
     else:
         folder = os.path.join(CFG['firmware_images_folder'], device_specific_subfolder)
 
-    print("Using firmware folder " + folder)
+    print("Using firmware folder: {}".format(folder))
 
     if not os.path.isdir(folder):
         print("Error>>> " + folder + " is not a folder!")
-        return
+        return None
 
     return get_path_of_latest_firmware(folder, current_major, current_minor)
 
 
-@app.route("/update/<status>")
-def handle_update(status):
-    # Returns the full file/path of the latest firmware, or None if we are already running the latest
-    print("Handling update request")
-    print(status)
+@app.route("/update", methods=["GET"])
+def update():
+    # Returns the full file/path of the latest firmware, or None if we are
+    # already running the latest
     current_version = request.headers['HTTP_X_ESP8266_VERSION']
     mac = request.headers['HTTP_X_ESP8266_STA_MAC']
     print("Mac %s" % mac)
@@ -187,19 +186,14 @@ def handle_update(status):
     # 'HTTP_X_ESP8266_STA_MAC': '2C:3A:E8:08:2C:38',
     # 'HTTP_X_ESP8266_VERSION': '0.120',
 
-    # Use passed url params to display a debugging payload -- all will be read as strings; specify defaults in web.input() call to avoid exceptions for missing values
-    # params = web.input(mqtt_status='Not specified')
-    # mqtt_status = params.mqtt_status
-    # print("MQTT status:", mqtt_status)
-
     newest_firmware = find_firmware_folder(current_version, mac)
-
     if newest_firmware:
         print("Upgrading birdhouse to " + newest_firmware)
-        return get_firmware(newest_firmware)
+        fw = get_firmware(newest_firmware)
+        return Response(fw.data, mimetype="application/octet-stream", headers={"X-MD5": fw.md5})
     else:
         print("Birdhouse already at most recent version (" + current_version + ")")
-        return None, 302
+        return "", 302
 
 
 @app.route("/validate_token", methods=["GET"])

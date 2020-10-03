@@ -61,3 +61,25 @@ def test_validate_token(client):
     assert resp.data == b"true"
 
 
+def test_update(client, tmpdir):
+    fw_dir = tmpdir.mkdir('firmwares')
+    redlight_greenlight.CFG['firmware_images_folder'] = fw_dir
+
+    # firmware not found should yield 404
+    assert client.get('/firmware').status_code == 404
+
+    # create a firmware
+    fw_file = fw_dir / "1.0.bin"
+    fw_contents = b"new firmware\x01\x02"
+    fw_file.write(fw_contents)
+
+    # device has latest firmware should return 302
+    headers = dict(HTTP_X_ESP8266_VERSION='1.0', HTTP_X_ESP8266_STA_MAC='aa:bb:cc:dd:ee:ff')
+    resp = client.get('/update', headers=headers)
+    assert resp.status_code == 302
+
+    # device needs new firmware should return 200 with the firmware binary
+    headers = dict(HTTP_X_ESP8266_VERSION='0.9', HTTP_X_ESP8266_STA_MAC='aa:bb:cc:dd:ee:ff')
+    resp = client.get('/update', headers=headers)
+    assert resp.status_code == 200
+    assert resp.data == fw_contents
