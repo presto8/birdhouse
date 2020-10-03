@@ -40,3 +40,23 @@ def test_firmware(client, tmpdir):
     assert resp.status_code == 200
     assert resp.data == fw_contents
     assert resp.headers['X-MD5'] == hashlib.md5(fw_contents).hexdigest()
+
+
+def test_validate_token(client, mocker):
+    # Mock the tbapi so we can unit test offline
+    tbapi = redlight_greenlight.tbapi = mocker.MagicMock(redlight_greenlight.tbapi)
+    tbapi.get_device_by_name = lambda x: 'valid_name'
+    tbapi.get_device_token = lambda x: 'valid_token'
+
+    # missing parameters should return 401
+    assert client.get('/validate_token').status_code == 401
+
+    # wrong token
+    resp = client.get('/validate_token', query_string=dict(name='unknown_name', token='abcd'))
+    assert resp.data == b"false"
+
+    # valid request
+    resp = client.get('/validate_token', query_string=dict(name='valid_name', token='valid_token'))
+    assert resp.data == b"true"
+
+

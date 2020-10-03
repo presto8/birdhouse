@@ -2,7 +2,7 @@
 
 from flask import Flask, request, Response
 from collections import namedtuple
-import googlemaps       # sudo pip install googlemaps
+import googlemaps
 import geopy.distance
 import re
 import os
@@ -202,24 +202,22 @@ def handle_update(status):
         return None, 302
 
 
-@app.route("/validatekey", methods=["GET"])
-def validatekey():
+@app.route("/validate_token", methods=["GET"])
+def validate_token():
     # Pass two args: name and key.  Returns "true" if key is the correct secret key for named device, "false" otherwise.
     # Used to validate whether users have input correct secret key when configuring devices.
     try:
         name = request.args['name']
-        key = request.args['key']
+        token = request.args['token']
     except KeyError:
-        return "Please specify 'name' and 'key' params", 401
+        return "Please specify 'name' and 'token' parameters", 401
 
     device = tbapi.get_device_by_name(name)
-
     if device is None:
         return "bad_device"
 
-    token = tbapi.get_device_token(device)
-
-    return "true" if token == key else "false"
+    tb_token = tbapi.get_device_token(device)
+    return "true" if tb_token == token else "false"
 
 
 def main():
