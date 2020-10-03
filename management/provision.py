@@ -240,7 +240,6 @@ def main(settings):
         upload_firmware_and_configure(print, settings)
 
     if attributes_only:
-        hhhh
         set_params(print, settings)
 
 
