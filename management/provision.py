@@ -109,7 +109,6 @@ settings = SimpleNamespace(**{
 })
 
 
-
 settings.birdhouse_number = args['<number>']
 settings.led_style        = args['--ledstyle']
 settings.device_token     = args['--token']
@@ -1071,15 +1070,14 @@ class MainMenu(Frame):
     def retrieve_token(self):
         device_name = self.make_device_name(self.layout.find_widget('local_ssid').value)
         print("Looking for device %s" % device_name)
-        device = tbapi.get_device_by_name(device_name)
+        device = self.tbapi.get_device_by_name(device_name)
         if device is None:
             self.layout.find_widget('device_token').value = 'DEVICE_NOT_FOUND'
             return
 
-        device_id = tbapi.get_id(device)
-        device_token = tbapi.get_device_token(device_id)
+        device_id = self.tbapi.get_id(device)
+        device_token = self.tbapi.get_device_token(device_id)
         self.layout.find_widget('device_token').value = device_token
-
 
     def _quit(self):
         self.save()
@@ -1149,7 +1147,6 @@ class ServerSetup(Frame):
         raise NextScene("Main")
 
 
-
 def singleton(screen, scene, tbapi, serial):
     scenes = [ Scene([Matrix(screen), MainMenu(screen, settings, tbapi, serial)], -1, name="Main"), ]
     screen.play(scenes, stop_on_resize=False, start_scene=scene)
@@ -1169,14 +1166,12 @@ class myThread(threading.Thread):
         self.update_callback = update_callback
         self.done_callback = done_callback
 
-
     def run(self):
         print("Starting " + self.name)
         if self.function(self.update_callback, *self.args):
             self.done_callback()
         else:
             self.done_callback()
-
 
 
 main(settings)
