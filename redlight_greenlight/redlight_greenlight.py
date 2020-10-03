@@ -47,6 +47,11 @@ def get_immediate_subdirectories(a_dir):
     return [name for name in os.listdir(a_dir) if os.path.isdir(os.path.join(a_dir, name))]
 
 
+def get_geolocate():
+    # helper function to assist with testability, so it can be mocked
+    return googlemaps.Client(key=CFG['google_geolocation_key']).geolocate
+
+
 @app.route("/wifi_location", methods=["POST"])
 def wifi_location():
     """Called by ThingsBoard server when a device sends a message containing
@@ -54,16 +59,15 @@ def wifi_location():
     Wi-Fi hotspots and signal strengths reported by device. Returns the
     location, distance, and accuracy in JSON."""
 
-    gmaps = googlemaps.Client(key=CFG['google_geolocation_key'])
-
     if request.json is None:
         return "did not provide any request data", 400
 
     hotspots = request.json.get("visibleHotspots", [])
     print("Geolocating for {} ".format(hotspots))
 
+    geolocate = get_geolocate()
     try:
-        results = gmaps.geolocate(wifi_access_points=hotspots)
+        results = geolocate(wifi_access_points=hotspots)
     except Exception as ex:
         return "Exception while geolocating: {}".format(ex), 500
 

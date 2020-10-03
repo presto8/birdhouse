@@ -1,7 +1,7 @@
 import pytest
 from redlight_greenlight import redlight_greenlight
 import hashlib
-from unittest.mock import MagicMock
+from unittest.mock import Mock
 
 
 @pytest.fixture
@@ -11,7 +11,10 @@ def app():
 
 
 def test_wifi_location(client):
-    return
+    # Mock gmaps API
+    geolocate_mock = Mock(return_value={'location': {'lat': 45.5007334, 'lng': -122.6445077}, 'accuracy': 30})
+    redlight_greenlight.get_geolocate = Mock(return_value=geolocate_mock)
+
     # missing JSON payload should return HTTP 400
     assert client.post('/wifi_location').status_code == 400
 
@@ -22,7 +25,7 @@ def test_wifi_location(client):
     response = client.post('/wifi_location', json=request_data)
     assert response.status_code == 200
     assert response.json['wifiDistanceAccuracy'] == 30
-    assert int(response.json['wifiDistance']) == 6
+    assert int(response.json['wifiDistance']) == 8
 
 
 def test_firmware(client, tmpdir):
@@ -46,9 +49,9 @@ def test_firmware(client, tmpdir):
 
 def test_validate_token(client):
     # Mock the tbapi so we can unit test offline
-    tbapi = redlight_greenlight.tbapi = MagicMock(redlight_greenlight.tbapi)
-    tbapi.get_device_by_name = lambda x: 'valid_name'
-    tbapi.get_device_token = lambda x: 'valid_token'
+    tbapi = redlight_greenlight.tbapi = Mock()
+    tbapi.get_device_by_name.return_value = 'valid_name'
+    tbapi.get_device_token.return_value = 'valid_token'
 
     # missing parameters should return 401
     assert client.get('/validate_token').status_code == 401
