@@ -31,14 +31,18 @@ firmware_images_folder = "fixme"
 """)
 
 
-try:
-    CFG = toml.load(build_config_path())
-except FileNotFoundError:
-    show_config_help(build_config_path())
-    print("Using defaults...")
-    CFG = dict(motherShipUrl="FIXME", username="FIXME", password="FIXME", data_encoding="utf-8", google_geolocation_key="FIXME", firmware_images_folder="FIXME")
-    print(CFG)
+def load_config(configpath):
+    try:
+        CFG = toml.load(configpath)
+    except FileNotFoundError:
+        show_config_help(configpath)
+        print("Using defaults...")
+        CFG = dict(motherShipUrl="FIXME", username="FIXME", password="FIXME", data_encoding="utf-8", google_geolocation_key="FIXME", firmware_images_folder="FIXME")
+        print(CFG)
+    return CFG
 
+
+CFG = load_config(build_config_path())
 tbapi = TbApi(CFG['motherShipUrl'], CFG['username'], CFG['password'])
 app = Flask(__name__)
 
