@@ -1,6 +1,7 @@
 import pytest
 from redlight_greenlight import redlight_greenlight
 import hashlib
+from unittest.mock import MagicMock
 
 
 @pytest.fixture
@@ -42,9 +43,9 @@ def test_firmware(client, tmpdir):
     assert resp.headers['X-MD5'] == hashlib.md5(fw_contents).hexdigest()
 
 
-def test_validate_token(client, mocker):
+def test_validate_token(client):
     # Mock the tbapi so we can unit test offline
-    tbapi = redlight_greenlight.tbapi = mocker.MagicMock(redlight_greenlight.tbapi)
+    tbapi = redlight_greenlight.tbapi = MagicMock(redlight_greenlight.tbapi)
     tbapi.get_device_by_name = lambda x: 'valid_name'
     tbapi.get_device_token = lambda x: 'valid_token'
 
