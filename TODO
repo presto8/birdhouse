@@ -1,16 +1,14 @@
 redlight_greenlight:
-- Convert what's left to Flask API
 - Fix the hotspots endpoint -- this is intended to receive a list of visibile
   wifi hotspots from a device, and use google's geolocation API to figure out
   (approximately) where the device is.  The idea being that we can tell if it
   has moved from where we think it is.  This used to work, but currently
-  doesn't.  redlight_greenlight:
+  doesn't.
 - Add types (if you've never worked with type hinting in Python, you'll either
   love it or hate it...  I love it... if you use VS Code, the pyright extension
   is what I use for this); if possible add # pyright: strict tag at the top.
-- Move data_encoding into the main program body redlight_greenlight:
-- Think of a new name  (sensorbot_services?) redlight_greenlight:
+- Move data_encoding into the main program body
+- Think of a new name  (sensorbot_services?)
 - Document what this does.  Implement swagger?  Not sure what the best practice
   would be here.
 - Add proper logging, ideally with some sort of logrotate scheme
-
