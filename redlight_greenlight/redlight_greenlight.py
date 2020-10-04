@@ -16,8 +16,10 @@ from thingsboard_api_tools import TbApi # sudo pip install git+git://github.com/
 def build_config_path(basename="birdhouse.cfg"):
     if 'XDG_CONFIG_HOME' in os.environ:
         return os.path.join(os.environ['XDG_CONFIG_HOME'], basename)
-    else:
+    elif 'HOME' in os.environ:
         return os.path.join(os.environ['HOME'], '.config', basename)
+    elif 'USERPROFILE' in os.environ:  # Windows
+        return os.path.join(os.environ['USERPROFILE'], '.config', basename)
 
 
 def show_config_help(path):
